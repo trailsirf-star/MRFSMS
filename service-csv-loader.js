@@ -40,6 +40,14 @@ function normalizeCountryName(value) {
     return String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
 
+const COUNTRY_NAME_ALIASES = {
+    'united states': 'usa',
+    'united states of america': 'usa',
+    'u s a': 'usa',
+    'us': 'usa',
+    'u s': 'usa'
+};
+
 function readJson(filePath, fallback) {
     try {
         if (!fs.existsSync(filePath)) return fallback;
@@ -77,8 +85,11 @@ function parseAgentIds(value) {
 function getCountryResolverEntry(countryResolver, serviceType, countryName) {
     const serviceKey = normalizeServiceType(serviceType);
     const countryKey = normalizeCountryName(countryName);
+    const aliasKey = COUNTRY_NAME_ALIASES[countryKey] || '';
     return countryResolver?.services?.[serviceKey]?.[countryKey]
+        || (aliasKey ? countryResolver?.services?.[serviceKey]?.[aliasKey] : null)
         || countryResolver?.global?.[countryKey]
+        || (aliasKey ? countryResolver?.global?.[aliasKey] : null)
         || null;
 }
 
@@ -167,9 +178,18 @@ function loadCsvServiceData(options = {}) {
             });
         });
 
+        const countriesWithAgentIds = countries.filter((country) => {
+            const serviceCountryPricing = pricing[serviceType]?.[Number(country.countryId)];
+            return serviceCountryPricing && Object.keys(serviceCountryPricing).length > 0;
+        });
+        if (!countriesWithAgentIds.length) {
+            delete pricing[serviceType];
+            delete providerRanksByServiceCountry[serviceType];
+            return;
+        }
         services[serviceType] = {
             serviceType,
-            countries
+            countries: countriesWithAgentIds
         };
     });
 
