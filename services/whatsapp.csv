@@ -1,6 +1,6 @@
 Country,Rank,Agent_IDs,Original_USD,Converted_PKR,Final_PKR
-South Africa,,,,,44
-
+South Africa,Bronze,3237,0.17,47.00,44.00
+South Africa,Bronze,3109,0.32,87.00,110.00
 South Africa,Bronze,2812,0.082,22.96,39.00
 South Africa,Bronze,3205,0.093,76.96,42.00
 South Africa,Bronze,2742,0.11,30.08,43.00
@@ -12,7 +12,7 @@ South Africa,Silver,3001,0.337,94.36,110
 South Africa,Bronze,3109,0.318,89.04,100
 South Africa,Bronze,3155,,,44
 South Africa,Bronze,3160,,,110
-Indonesia,,,,,90
+Indonesia,Silver,3426,0.16,44.00,60.00
 Indonesia,Bronze,54,,,173
 Indonesia,Bronze,1056,,,102
 Indonesia,Bronze,2260,,,253
