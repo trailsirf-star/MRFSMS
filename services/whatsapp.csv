@@ -1,55 +1,45 @@
 Country,Rank,Agent_IDs,Original_USD,Converted_PKR,Final_PKR
-South Africa,Bronze,3237,0.17,47.00,44.00
-South Africa,Bronze,3109,0.32,87.00,110.00
-South Africa,Bronze,2812,0.082,22.96,39.00
-South Africa,Bronze,3205,0.093,76.96,42.00
-South Africa,Bronze,2742,0.11,30.08,43.00
-South Africa,Bronze,2984,0.12,33.06,44.00
-South Africa,Bronze,2944,0.13,36.04,60.00
-South Africa,Bronze,2217,0.624,174.72,200
-South Africa,Bronze,2260,,,220
-South Africa,Silver,3001,0.337,94.36,110
-South Africa,Bronze,3109,0.318,89.04,100
-South Africa,Bronze,3155,,,44
-South Africa,Bronze,3160,,,110
-Indonesia,Silver,3426,0.16,44.00,60.00
-Indonesia,Bronze,54,,,173
-Indonesia,Bronze,1056,,,102
-Indonesia,Bronze,2260,,,253
-Indonesia,Silver,2272,,,93
-Indonesia,Bronze,2750,0.786,220.08,253
-Indonesia,Silver,3001,,,110
-Indonesia,Gold,3029,0.16,44.8,130
-Indonesia,Gold,3061,,,170
-Indonesia,Bronze,3094,,,104
-Indonesia,Bronze,3109,0.163,45.64,90
-Indonesia,Bronze,3160,,,101
-Indonesia,Silver,3168,,,99
-Indonesia,Silver,3267,,,96
-Indonesia,Silver,3320,,,92
-Indonesia,Gold,3327,,,180
-Indonesia,Silver,3334,,,94
-Indonesia,Bronze,3347,,,100
-Indonesia,Bronze,3355,,,103
-Indonesia,Bronze,3386,,,105
-Indonesia,Bronze,3406,,,110
-Indonesia,Bronze,3417,,,98
-Indonesia,Gold,3424,,,130
-Indonesia,Silver,3426,,,91
-Canada,,,,,130
-Canada,Bronze,2217,0.292,81.76,132
-Canada,Silver,2262,0.52,145.6,168
-Canada,Bronze,2430,0.286,80.08,215
-Canada,Bronze,2462,1.067,298.76,344
-Canada,Bronze,2567,0.626,175.28,227
-Canada,Silver,2568,,,215
-Canada,Bronze,2675,,,215
-Canada,Silver,3001,,,190
-Canada,Bronze,3109,0.35,98,200
-Canada,Bronze,3160,,,140
-Canada,Bronze,3198,0.315,88.2,131
-Canada,Bronze,3228,0.286,80.08,130
-Canada,Bronze,3406,,,180
+South Africa,3|0.63,Bronze,2217,0.630000,176.40,220.50
+South Africa,3|0.354,Bronze,2354,0.354000,99.12,138.77
+South Africa,3|0.668,Bronze,"2579,2750,3330,3370",0.668000,187.04,233.80
+South Africa,3|0.128,Bronze,2984,0.128000,35.84,53.76
+South Africa,3|0.34,Bronze,3001,0.340000,95.20,133.28
+South Africa,3|0.32,Bronze,3109,0.320000,89.60,125.44
+South Africa,3|0.334,Bronze,"3160,3393",0.334000,93.52,130.93
+South Africa,3|0.158,Bronze,3237,0.158000,44.24,66.36
+Indonesia,3|0.534,Bronze,54,0.534000,149.52,186.90
+Indonesia,group_6377_5,Silver,"1085,3224,3355",0.267000,74.76,104.66
+Indonesia,group_6377_3,Gold,"1170,1329,3029,3332,3333,3339",0.160000,44.80,67.20
+Indonesia,group_6377_1,Bronze,"2263,2295,2579,2738,2750,3193,3211,3330,3353",0.786000,220.08,264.10
+Indonesia,3|0.786,Bronze,"2434,2442,3309,3370,3395",0.786000,220.08,264.10
+Indonesia,group_6377_2,Bronze,"2739,3001,3027,3371",0.346000,96.88,135.63
+Indonesia,1|0.174,Gold,3061,0.174000,48.72,73.08
+Indonesia,3|0.108,Bronze,3075,0.108000,30.24,45.36
+Indonesia,3|0.118,Bronze,3105,0.118000,33.04,49.56
+Indonesia,1|0.114,Gold,3109,0.114000,31.92,47.88
+Indonesia,3|0.532,Bronze,3251,0.532000,148.96,186.20
+Indonesia,1|0.156,Gold,3320,0.156000,43.68,65.52
+Indonesia,1|0.175,Gold,3327,0.175000,49.00,73.50
+Indonesia,2|0.111,Silver,3334,0.111000,31.08,46.62
+Indonesia,3|0.264,Bronze,3340,0.264000,73.92,103.49
+Indonesia,1|0.107,Gold,3347,0.107000,29.96,44.94
+Indonesia,3|0.327,Bronze,3377,0.327000,91.56,128.18
+Indonesia,3|0.26,Bronze,"3384,3424",0.260000,72.80,101.92
+Indonesia,2|0.267,Silver,3406,0.267000,74.76,104.66
+Indonesia,1|0.1,Gold,3417,0.100000,28.00,42.00
+Indonesia,2|0.16,Silver,3426,0.160000,44.80,67.20
+Indonesia,1|0.127,Gold,3427,0.127000,35.56,53.34
+Canada,3|0.295,Bronze,2217,0.295000,82.60,115.64
+Canada,group_6373_3,Bronze,"2430,2441,2524,2620",0.400000,112.00,140.00
+Canada,3|0.4,Bronze,"2440,2568,2675,2677,2681,2748,2767,2784,3198",0.400000,112.00,140.00
+Canada,2|1.067,Silver,2462,1.067000,298.76,358.51
+Canada,group_6373_1,Bronze,"2567,2750,3094",0.702000,196.56,245.70
+Canada,3|1.067,Bronze,"2579,3309,3330,3370,3393",1.067000,298.76,358.51
+Canada,3|0.34,Bronze,3001,0.340000,95.20,133.28
+Canada,group_6373_2,Bronze,3109,0.353000,98.84,138.38
+Canada,group_6373_4,Bronze,3228,0.226000,63.28,88.59
+Canada,3|0.52,Bronze,3329,0.520000,145.60,182.00
+Canada,3|0.575,Bronze,3335,0.575000,161.00,201.25
 Vietnam,,,,,100
 Vietnam,Bronze,2318,0.254,71.12,130
 Vietnam,Bronze,2750,0.584,163.52,300
