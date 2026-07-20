@@ -1,3 +1,3 @@
-﻿Country,Position,Rank,Agent_IDs,Original_USD,Converted_PKR,Final_PKR
-India,3|0.032,Bronze,"2805,3193,3330,3309",0.032000,8.96,14.34
-Kosovo,3|0.063,Bronze,3168,0.063000,17.64,28.22
+﻿Country,Rank,Agent_IDs,Original_USD,Converted_PKR,Final_PKR
+India,Bronze,"2805,3193,3309,3330",0.032000,8.96,14.34
+Kosovo,Bronze,3168,0.063000,17.64,28.22
