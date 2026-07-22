@@ -4868,7 +4868,7 @@ function extendWhatsappCountriesFromFile(catalog) {
 const whatsappCountryStatus = {
     'South Africa': { label: 'Normal OTP', color: 'green' },
     'Indonesia': { label: 'Good OTP', color: 'green' },
-    'Canada': { label: 'Good OTP', color: 'green' },
+    'Canada': { label: 'BAN CHANCES', color: 'red' },
     'Philippines': { label: 'Good OTP', color: 'green' },
     'Thailand': { label: 'Good OTP', color: 'green' },
     'Vietnam': { label: 'Good OTP', color: 'green' },
