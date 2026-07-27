@@ -1695,11 +1695,10 @@ function setActivePaymentMethod(method = 'easypaisa') {
         amountInput.placeholder = methodMeta.amountPlaceholder;
         amountInput.min = String(methodMeta.minAmount);
     }
-if (transactionInput) {
-    transactionInput.placeholder = methodMeta.transactionPlaceholder;
-    transactionInput.required = methodMeta.transactionRequired;
-    transactionInput.parentElement?.classList.toggle('hidden', methodMeta.key !== 'binance');
-}
+    if (transactionInput) {
+        transactionInput.placeholder = methodMeta.transactionPlaceholder;
+        transactionInput.required = methodMeta.transactionRequired;
+    }
     if (uploadTitle) {
         uploadTitle.textContent = methodMeta.uploadTitle;
     }
@@ -5527,10 +5526,10 @@ function bindStaticEvents() {
             showPaymentFormError(methodMeta.key === 'binance' ? 'Minimum Binance deposit is 1 USDT' : 'Minimum amount is 100 PKR');
             return;
         }
-      if (methodMeta.key === 'binance' && !transactionId) {
-    showPaymentFormError('Binance transaction ID is required');
-    return;
-}
+        if (methodMeta.transactionRequired && !transactionId) {
+            showPaymentFormError('Binance transaction ID is required');
+            return;
+        }
         if (!screenshotFile) {
             showPaymentFormError('Screenshot upload is required');
             return;
