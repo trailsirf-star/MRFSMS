@@ -1,12 +1,15 @@
 Country,Rank,Agent_IDs,Original_USD,Converted_PKR,Final_PKR
-South Africa,Bronze,"2750,2579,3330,3370,3168,3271",0.668000,187.04,261.86
-South Africa,Bronze,2217,0.630000,176.40,246.96
-South Africa,Bronze,3001,0.340000,95.20,152.32
-South Africa,Bronze,3160,0.334000,93.52,149.63
-South Africa,Bronze,3109,0.320000,89.60,143.36
-South Africa,Bronze,3393,0.247000,69.16,110.66
-South Africa,Bronze,2354,0.354000,99.12,158.59
-South Africa,Bronze,3335,0.238000,66.64,106.62
+South Africa,Bronze,"2750,2579,3330,3370,3168,2920,2260,3271",0.668000,187.04,233.80
+South Africa,Bronze,2217,0.630000,176.40,220.50
+South Africa,Bronze,3001,0.340000,95.20,133.28
+South Africa,Bronze,3160,0.334000,93.52,130.93
+South Africa,Bronze,3109,0.320000,89.60,125.44
+South Africa,Bronze,3393,0.267000,74.76,104.66
+South Africa,Bronze,2354,0.355000,99.40,139.16
+South Africa,Bronze,2649,0.162000,45.36,68.04
+South Africa,Bronze,2742,0.110000,30.80,46.20
+South Africa,Bronze,2812,0.082000,22.96,34.44
+South Africa,Bronze,2944,0.104000,29.12,43.68
 Indonesia,Bronze,"2750,2263,2295,2738,2579,3193,3211,3330,3335,3353",0.786000,220.08,264.10
 Indonesia,Gold,3109,0.115000,32.20,57.96
 Indonesia,Bronze,"3001,2739,3027",0.346000,96.88,155.01
