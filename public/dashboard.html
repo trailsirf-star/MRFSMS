@@ -1351,7 +1351,7 @@ Spam activity = Ban risk</div>
                                 <div>Send the exact Easypaisa amount and upload the same payment screenshot here for approval.</div>
                             </div>
                         </div>
-                <div class="payment-method-panel hidden" data-payment-method-panel="binance">
+<div class="payment-method-panel hidden" data-payment-method-panel="binance">
     <div class="payment-info-box payment-info-box--binance">
         <div class="payment-method-banner">
             <div>
@@ -1387,21 +1387,30 @@ Spam activity = Ban risk</div>
             <span>Minimum Deposit</span>
             <strong>1 USDT</strong>
         </div>
-
-        <div class="input-wrap">
-            <input
-                type="text"
-                name="transaction_id"
-                id="payment-transaction-id-input"
-                placeholder="Binance Transaction ID (required)"
-                autocomplete="off"
-                autocapitalize="none"
-                autocorrect="off"
-                spellcheck="false"
-                required
-            >
-        </div>
     </div>
+
+    <div class="payment-method-warning payment-method-warning--binance">
+        <strong>Important</strong>
+        <div>Send payment using Binance UID Transfer only.</div>
+        <div>Do NOT use blockchain network transfer.</div>
+        <div>Only direct Binance internal transfer accepted.</div>
+        <div>Minimum deposit is 1 USDT.</div>
+    </div>
+
+    <div class="input-wrap">
+        <input
+            type="text"
+            name="transaction_id"
+            id="payment-transaction-id-input"
+            placeholder="Binance Transaction ID (required)"
+            autocomplete="off"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
+            required
+        >
+    </div>
+</div>
 
     <div class="payment-method-warning payment-method-warning--binance">
         <strong>Important</strong>
