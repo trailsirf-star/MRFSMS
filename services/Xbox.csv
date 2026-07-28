@@ -1,0 +1,28 @@
+﻿Country,Rank,Agent_IDs,Original_USD,Converted_PKR,Final_PKR
+South Africa,Bronze,2649,0.006000,1.74,2.78
+South Africa,Bronze,2742,0.047000,13.63,21.81
+South Africa,Bronze,2944,0.090000,26.10,39.15
+South Africa,Bronze,"3168,3330",0.158000,45.82,68.73
+Ukraine,Bronze,2263,0.116000,33.64,50.46
+Ukraine,Bronze,2738,0.158000,45.82,68.73
+Ukraine,Bronze,2739,0.042000,12.18,19.49
+Ukraine,Bronze,3168,0.126000,36.54,54.81
+Ukraine,Bronze,"3193,3330",0.167000,48.43,72.64
+United Kingdom,Bronze,"1015,3397",0.100000,29.00,43.50
+United Kingdom,Bronze,2263,0.066000,19.14,30.62
+United Kingdom,Bronze,"2291,2914,3193,3330,3368",0.134000,38.86,58.29
+United Kingdom,Bronze,2738,0.087000,25.23,37.84
+United Kingdom,Bronze,2739,0.042000,12.18,19.49
+United Kingdom,Bronze,3212,0.040000,11.60,18.56
+United Kingdom,Bronze,3435,0.076000,22.04,33.06
+Germany,Bronze,2263,0.058000,16.82,26.91
+Germany,Bronze,2738,0.064000,18.56,29.70
+Germany,Bronze,"2966,3193,3309,3330,3435",0.151000,43.79,65.69
+Germany,Bronze,3168,0.024000,6.96,11.14
+Poland,Bronze,2263,0.074000,21.46,32.19
+Poland,Bronze,2284,0.100000,29.00,43.50
+Poland,Bronze,2738,0.087000,25.23,37.84
+Poland,Bronze,2739,0.042000,12.18,19.49
+Poland,Bronze,"3193,3309,3330",0.134000,38.86,58.29
+Malaysia,Bronze,"1384,3193,3309,3330",0.134000,38.86,58.29
+Kosovo,Bronze,3168,0.063000,18.27,29.23
