@@ -881,16 +881,17 @@ Kosovo,Bronze,3168,0.118000,33.04,59.47
 Liechtenstein,Bronze,3001,0.340000,95.20,152.32
 Liechtenstein,Bronze,3370,2.353000,658.84,790.61
 Sint Maarten,Bronze,3001,0.340000,95.20,152.32
-United States (virtual),Bronze,2262,0.650000,182.00,254.80
-United States (virtual),Bronze,"2430,2440,2441,2767,2748,2784,2675,2620,2568",0.134000,37.52,67.54
+United States (virtual),Bronze,2262,0.650000,182.00,227.50
+United States (virtual),Bronze,"2430,2440,2441,2524,2568,2620,2677,2767,2784",0.134000,37.52,56.28
 United States (virtual),Bronze,"2461,3193,3330",2.118000,593.04,711.65
-United States (virtual),Bronze,2750,1.358000,380.24,456.29
-United States (virtual),Gold,3209,0.134000,37.52,67.54
-United States (virtual),Bronze,3140,0.400000,112.00,156.80
-United States (virtual),Bronze,3160,0.695000,194.60,272.44
-United States (virtual),Bronze,3228,0.604000,169.12,236.77
-United States (virtual),Bronze,3154,0.331000,92.68,148.29
-United States (virtual),Bronze,"3309,3406",1.356000,379.68,455.62
-United States (virtual),Bronze,3212,0.181000,50.68,81.09
-United States (virtual),Bronze,"3393,3335,3418,3328",1.913000,535.64,642.77
+United States (virtual),Silver,"2675,2681,2748",0.134000,37.52,56.28
+United States (virtual),Bronze,3140,0.400000,112.00,140.00
+United States (virtual),Bronze,"3154,3228",0.331000,92.68,129.75
+United States (virtual),Bronze,3160,0.695000,194.60,243.25
+United States (virtual),Gold,3209,0.134000,37.52,56.28
+United States (virtual),Silver,3212,0.181000,50.68,70.95
+United States (virtual),Bronze,"3309,3328,3393",1.782000,498.96,598.75
+United States (virtual),Bronze,3335,1.913000,535.64,642.77
+United States (virtual),Bronze,"3406,3418",1.356000,379.68,455.62
+United States (virtual),Gold,3441,2.118000,593.04,711.65
 Gibraltar,Bronze,"2750,3370,2579,3371,3309",21.235000,5945.80,7134.96
