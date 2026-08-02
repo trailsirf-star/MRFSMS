@@ -253,8 +253,23 @@
         .payment-method-tab:focus-visible,.payment-copy-button:focus-visible,.payment-upload-box:focus-within,#payment-modal .btn-primary:focus-visible{outline:3px solid rgba(59,130,246,.22);outline-offset:2px}
         .payment-method-tab.active{border-color:#bbf7d0;background:#ffffff;color:#166534;box-shadow:0 12px 28px rgba(15,23,42,.08)}
         .payment-method-tab[data-payment-method-tab='binance'].active{border-color:#fde68a;background:#ffffff;color:#92400e;box-shadow:0 12px 28px rgba(146,64,14,.10)}
-        .payment-method-tab-mark{display:inline-flex;height:30px;width:30px;align-items:center;justify-content:center;border-radius:12px;background:#ffffff;font-size:13px;font-weight:900;color:#0f172a;box-shadow:inset 0 0 0 1px #e2e8f0}
-        .payment-method-tab.active .payment-method-tab-mark{background:#dcfce7;color:#166534;box-shadow:none}
+      .payment-method-tab-mark{
+    display:inline-flex;
+    width:42px;
+    height:42px;
+    align-items:center;
+    justify-content:center;
+    border-radius:14px;
+    background:#fff;
+    overflow:hidden;
+    box-shadow:inset 0 0 0 1px #e2e8f0;
+}
+        .payment-method-logo{
+    width:24px;
+    height:24px;
+    object-fit:contain;
+    display:block;
+}
         .payment-method-tab[data-payment-method-tab='binance'].active .payment-method-tab-mark{background:#111827;color:#facc15;box-shadow:none}
         .payment-method-panel{display:grid;gap:14px;animation:paymentPanelSlide .28s ease both}
         .payment-method-panel.hidden{display:none}
@@ -567,7 +582,8 @@
             .payment-method-tab-mark{height:26px!important;width:26px!important;font-size:11px!important;border-radius:10px!important}
             .payment-info-box{padding:14px!important;gap:10px!important;border-radius:22px!important}
             .payment-card-head{gap:10px!important}
-            .payment-card-logo{height:44px!important;width:44px!important;border-radius:15px!important}
+           .payment-card-logo{width:48px!important;height:48px!important;border-radius:14px!important;}
+           .payment-card-logo img{width:34px!important;height:34px!important;object-fit:contain!important;display:block!important;}
             .payment-card-title{font-size:17px!important}
             .payment-card-subtitle{font-size:10px!important;letter-spacing:.12em!important}
             .payment-brand-watermark{display:none!important}
@@ -1468,9 +1484,9 @@ Spam activity = Ban risk</div>
                             <div class="payment-info-box">
                                 <div class="payment-card-head">
                                     <div class="payment-card-brand">
-                                        <span class="payment-card-logo" aria-hidden="true">
-                                            <svg viewBox="0 0 44 44" width="36" height="36"><circle cx="22" cy="22" r="21" fill="#10B981"/><path d="M12 23.4c5.7-8.9 12.7-10.9 20-9.1-6.9 3.2-11.8 8.2-14.9 14.9L12 23.4Z" fill="#fff"/><path d="M13.5 29.4c6-2.8 11.5-2.8 16.7 0-5.5 3.6-10.9 3.7-16.7 0Z" fill="#D1FAE5"/></svg>
-                                        </span>
+                                    <span class="payment-card-logo" aria-hidden="true">
+                                    <img src="/assets/payment/easypaisa.png" alt="Easypaisa">
+                                     </span>
                                         <div>
                                             <div class="payment-card-title">Easypaisa</div>
                                             <div class="payment-card-subtitle">Wallet deposit</div>
@@ -1509,9 +1525,9 @@ Spam activity = Ban risk</div>
                             <div class="payment-info-box payment-info-box--binance">
                                 <div class="payment-card-head">
                                     <div class="payment-card-brand">
-                                        <span class="payment-card-logo" aria-hidden="true">
-                                            <svg viewBox="0 0 44 44" width="36" height="36"><rect width="44" height="44" rx="22" fill="#111827"/><path d="M22 8.8 26.1 12.9 22 17 17.9 12.9 22 8.8Zm9.6 9.6 4.1 4.1-4.1 4.1-4.1-4.1 4.1-4.1Zm-19.2 0 4.1 4.1-4.1 4.1-4.1-4.1 4.1-4.1Zm9.6 0 4.1 4.1-4.1 4.1-4.1-4.1 4.1-4.1Zm0 9.6 4.1 4.1-4.1 4.1-4.1-4.1L22 28Z" fill="#FACC15"/></svg>
-                                        </span>
+                                   <span class="payment-card-logo" aria-hidden="true">
+                                      <img src="/assets/payment/binance.png" alt="Binance">
+                                         </span>
                                         <div>
                                             <div class="payment-card-title">Binance</div>
                                             <div class="payment-card-subtitle">UID transfer</div>
