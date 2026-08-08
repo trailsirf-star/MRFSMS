@@ -34,14 +34,11 @@ async function createPaymentRequestSubmission(req) {
     }
     const transactionId = normalizePaymentReference(req.body.transaction_id);
     const screenshot = req.file ? req.file.filename : null;
-    const requiresPaymentProof = methodConfig.paymentMethod === 'all-banks';
-    if (requiresPaymentProof) {
-        if (!screenshot) {
-            throw new Error('Payment screenshot is required');
-        }
-        if (!(await isValidUploadedPaymentProof(screenshot))) {
-            throw new Error('Invalid payment proof file');
-        }
+    if (!screenshot) {
+        throw new Error('Payment screenshot is required');
+    }
+    if (!(await isValidUploadedPaymentProof(screenshot))) {
+        throw new Error('Invalid payment proof file');
     }
 if (methodConfig.requiresTransactionId && !transactionId) {
         throw new Error(methodConfig.paymentMethod === 'easypaisa'
@@ -51,7 +48,7 @@ if (methodConfig.requiresTransactionId && !transactionId) {
     if (methodConfig.paymentMethod === 'easypaisa' && !/^\d{11}$/.test(transactionId)) {
         throw new Error('Please enter your complete 11-digit TRX ID');
     }
-    const proofHash = screenshot ? await hashUploadedFile(screenshot) : null;
+    const proofHash = await hashUploadedFile(screenshot);
     if (proofHash) {
         const duplicateProof = await queryOne('SELECT id FROM payment_requests WHERE proof_hash = $1 LIMIT 1', [proofHash]);
         if (duplicateProof) {
