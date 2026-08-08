@@ -70,32 +70,32 @@ const adminAccordion = {
 };
 
 const PAYMENT_METHOD_META = {
-    easypaisa: {
+  easypaisa: {
         key: 'easypaisa',
         label: 'Easypaisa',
         minAmount: 100,
         currency: 'PKR',
         amountPlaceholder: 'Amount (Minimum 100 PKR)',
-        transactionPlaceholder: 'Easypaisa Transaction ID (optional but recommended)',
-        transactionRequired: false,
+        transactionPlaceholder: 'Enter your 11-digit TRX ID',
+        transactionRequired: true,
         uploadTitle: 'Upload Easypaisa payment screenshot',
         guidanceText: 'پیمنٹ کی اسکرین شاٹ اس باکس میں ڈال کر سبمٹ پیمنٹ پر کلک کر دیجیے',
         guidanceDirection: 'rtl',
         submitLabel: 'Submit Payment',
         successTitle: 'Payment Submitted Successfully'
     },
-    binance: {
-        key: 'binance',
-        label: 'Binance',
-        minAmount: 1,
-        currency: 'USDT',
-        amountPlaceholder: 'Amount sent (Minimum 1 USDT)',
-        transactionPlaceholder: 'Binance Transaction ID',
-        transactionRequired: true,
-        uploadTitle: 'Upload Binance transfer screenshot',
-        guidanceText: 'Send payment using Binance UID Transfer only. Do NOT use blockchain network transfer. Only direct Binance internal transfer accepted. Minimum deposit is 1 USDT.',
+'all-banks': {
+        key: 'all-banks',
+        label: 'All Bank Payments',
+        minAmount: 100,
+        currency: 'PKR',
+        amountPlaceholder: 'Amount (Minimum 100 PKR)',
+        transactionPlaceholder: 'Transaction ID / Reference ID',
+        transactionRequired: false,
+        uploadTitle: 'Upload payment screenshot',
+        guidanceText: 'Send payment via SadaPay, bank transfer, or other available payment methods, then upload your screenshot. Your payment will be manually checked by our admin team.',
         guidanceDirection: 'ltr',
-        submitLabel: 'Submit Binance Receipt',
+        submitLabel: 'Submit Payment',
         successTitle: 'Payment Submitted Successfully'
     }
 };
@@ -1608,9 +1608,11 @@ function openModal(id) {
 
 function clearPaymentFormError() {
     const errorBox = qs('payment-form-error');
-    if (!errorBox) return;
-    errorBox.textContent = '';
-    errorBox.classList.remove('show');
+    if (errorBox) {
+        errorBox.textContent = '';
+        errorBox.classList.remove('show');
+    }
+ setTransactionIdError(false);
 }
 
 function showPaymentFormError(message) {
@@ -1622,7 +1624,12 @@ function showPaymentFormError(message) {
     errorBox.textContent = message;
     errorBox.classList.add('show');
 }
-
+function setTransactionIdError(hasError) {
+    const input = qs('payment-transaction-id-input');
+    if (input) {
+        input.classList.toggle('is-invalid', Boolean(hasError));
+    }
+}
 function getPaymentMethodMeta(method) {
     const normalizedMethod = String(method || 'easypaisa').trim().toLowerCase();
     return PAYMENT_METHOD_META[normalizedMethod] || PAYMENT_METHOD_META.easypaisa;
@@ -1637,18 +1644,12 @@ function getPaymentCreditAmount(request) {
 }
 
 function formatPaymentRequestAmountText(request) {
-    const methodMeta = getPaymentMethodMeta(request?.payment_method);
-    if (methodMeta.key === 'binance') {
-        const creditAmount = getPaymentCreditAmount(request);
-        const creditText = creditAmount > 0 ? ` • Credit ${formatMoneyPrecise(creditAmount)}` : '';
-        return `${formatUsdtAmount(request?.amount || 0)}${creditText}`;
-    }
     return formatMoneyPrecise(request?.amount || 0);
 }
 
 function getPaymentRequestReferenceLabel(request) {
-    return getPaymentMethodMeta(request?.payment_method).key === 'binance'
-        ? 'Binance Transaction ID'
+    return getPaymentMethodMeta(request?.payment_method).key === 'all-banks'
+        ? 'Transaction ID / Reference ID'
         : 'Transaction ID';
 }
 
@@ -1657,7 +1658,7 @@ function getPaymentRequestReferenceValue(request) {
     if (request?.transaction_id) {
         return request.transaction_id;
     }
-    return methodMeta.key === 'binance' ? 'Required for Binance approval' : 'Awaiting verification';
+    return methodMeta.key === 'all-banks' ? 'Not provided — manual review' : 'Awaiting verification';
 }
 
 function getPaymentVerificationUrl(request) {
@@ -1873,9 +1874,13 @@ function setActivePaymentMethod(method = 'easypaisa') {
         amountInput.placeholder = methodMeta.amountPlaceholder;
         amountInput.min = String(methodMeta.minAmount);
     }
-    if (transactionInput) {
+if (transactionInput) {
         transactionInput.placeholder = methodMeta.transactionPlaceholder;
         transactionInput.required = methodMeta.transactionRequired;
+    }
+    const transactionFieldWrap = transactionInput?.closest('div');
+    if (transactionFieldWrap) {
+        transactionFieldWrap.classList.toggle('hidden', methodMeta.key === 'all-banks');
     }
     if (uploadTitle) {
         uploadTitle.textContent = methodMeta.uploadTitle;
@@ -4296,7 +4301,7 @@ function renderPaymentHistoryCards(requests) {
     const container = qs('payment-history-list');
     if (!container) return;
     if (!requests.length) {
-        container.innerHTML = renderEmptyState('No payment requests yet', 'Your submitted Easypaisa and Binance add-money requests will appear here after submission.');
+        container.innerHTML = renderEmptyState('No payment requests yet', 'Your submitted Easypaisa and All Bank Payments add-money requests will appear here after submission.');
         return;
     }
     const sortedRequests = [...requests].sort((left, right) => new Date(right.created_at) - new Date(left.created_at));
@@ -4368,7 +4373,7 @@ function renderAdminPaymentRequests(paymentRequests, legacyTransactions) {
         }))
     ];
     if (!items.length) {
-        return renderEmptyState('No pending requests', 'New Easypaisa and Binance payment requests will appear here for verification and approval.');
+        return renderEmptyState('No pending requests', 'New Easypaisa and All Bank Payments requests will appear here for verification and approval.');
     }
     const rows = items.map((item) => {
         const methodMeta = getPaymentMethodMeta(item.payment_method);
@@ -5720,6 +5725,10 @@ function bindStaticEvents() {
         uploadBox?.classList.toggle('is-selected', Boolean(file));
         if (file) clearPaymentFormError();
     });
+    qs('payment-transaction-id-input')?.addEventListener('input', () => {
+    setTransactionIdError(false);
+        clearPaymentFormError();
+    });
     qs('addFundsForm').addEventListener('submit', async (event) => {
         event.preventDefault();
         const button = qs('submit-payment-btn');
@@ -5735,11 +5744,13 @@ function bindStaticEvents() {
         const note = qs('payment-note-input')?.value.trim() || '';
         const screenshotFile = qs('payment-screenshot-input')?.files?.[0];
         if (!amount || amount < methodMeta.minAmount) {
-            showPaymentFormError(methodMeta.key === 'binance' ? 'Minimum Binance deposit is 1 USDT' : 'Minimum amount is 100 PKR');
+            showPaymentFormError('Minimum amount is 100 PKR');
             return;
         }
-        if (methodMeta.transactionRequired && !transactionId) {
-            showPaymentFormError('Binance transaction ID is required');
+     if (methodMeta.transactionRequired && !transactionId) {
+            showPaymentFormError(methodMeta.key === 'easypaisa'
+                ? 'Please enter your payment TRX ID first'
+                : 'Transaction ID / Reference ID is required');
             return;
         }
         if (!screenshotFile) {
