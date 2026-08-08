@@ -15,9 +15,9 @@ try {
 
 async function createPaymentRequestSubmission(req) {
     const requestedPaymentMethod = String(req.body.payment_method || '').trim().toLowerCase();
-    if (requestedPaymentMethod && !['easypaisa', 'binance'].includes(requestedPaymentMethod)) {
-        throw new Error('Unsupported payment method');
-    }
+   if (requestedPaymentMethod && !['easypaisa', 'all-banks'].includes(requestedPaymentMethod)) {
+    throw new Error('Unsupported payment method');
+}
     const methodConfig = getPaymentMethodConfig(requestedPaymentMethod);
     const amount = roundMoney(Number.parseFloat(req.body.amount));
     if (!Number.isFinite(amount) || amount < methodConfig.minimumAmount) {
@@ -40,8 +40,13 @@ async function createPaymentRequestSubmission(req) {
     if (!(await isValidUploadedPaymentProof(screenshot))) {
         throw new Error('Invalid payment proof file');
     }
-    if (methodConfig.requiresTransactionId && !transactionId) {
-        throw new Error(`${methodConfig.transactionLabel} is required`);
+if (methodConfig.requiresTransactionId && !transactionId) {
+        throw new Error(methodConfig.paymentMethod === 'easypaisa'
+            ? 'Please enter your payment TRX ID first'
+            : `${methodConfig.transactionLabel} is required`);
+    }
+    if (methodConfig.paymentMethod === 'easypaisa' && !/^\d{11}$/.test(transactionId)) {
+        throw new Error('Please enter your complete 11-digit TRX ID');
     }
     const proofHash = await hashUploadedFile(screenshot);
     if (proofHash) {
@@ -54,7 +59,7 @@ async function createPaymentRequestSubmission(req) {
     const browserFingerprint = normalizeBrowserFingerprint(req.body.browserFingerprint);
     const note = String(req.body.note || '').trim().slice(0, 500) || null;
     const creditedAmount = roundMoney(methodConfig.creditedAmountCalculator(amount));
-    await queryRun(
+    const insertedPaymentRequest = await queryOne(
         `
             INSERT INTO payment_requests (
                 user_id,
@@ -74,6 +79,7 @@ async function createPaymentRequestSubmission(req) {
                 proof_hash
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+            RETURNING id
         `,
         [
             req.session.userId,
@@ -94,6 +100,12 @@ async function createPaymentRequestSubmission(req) {
         ]
     );
     paymentRateLimiter[req.session.userId] = Date.now();
+
+if (methodConfig.paymentMethod === 'easypaisa' && insertedPaymentRequest?.id) {
+        // If a matching Easypaisa notification already arrived before this
+        // request was submitted, auto-approve immediately (TRX ID + amount).
+        await tryMatchExistingNotificationForRequest(insertedPaymentRequest.id, amount);
+    }
     return {
         success: true,
         paymentMethod: methodConfig.paymentMethod,
@@ -1200,20 +1212,23 @@ function normalizePaymentReference(value) {
 
 function normalizePaymentMethod(value) {
     const normalizedValue = String(value || '').trim().toLowerCase();
+    if (normalizedValue === 'all-banks') {
+        return 'all-banks';
+    }
     return normalizedValue === 'binance' ? 'binance' : 'easypaisa';
 }
 
 function getPaymentMethodConfig(paymentMethod) {
     const normalizedMethod = normalizePaymentMethod(paymentMethod);
-    if (normalizedMethod === 'binance') {
+    if (normalizedMethod === 'all-banks') {
         return {
-            paymentMethod: 'binance',
-            amountCurrency: 'USDT',
-            minimumAmount: BINANCE_MIN_DEPOSIT_USDT,
+            paymentMethod: 'all-banks',
+            amountCurrency: 'PKR',
+            minimumAmount: EASYPAISA_MIN_DEPOSIT_PKR,
             creditedAmountLabel: 'PKR wallet credit',
-            creditedAmountCalculator: (amount) => usdToPkr(amount),
-            transactionLabel: 'Binance transaction ID',
-            requiresTransactionId: true
+            creditedAmountCalculator: (amount) => roundMoney(amount),
+            transactionLabel: 'Transaction / Reference ID',
+            requiresTransactionId: false
         };
     }
     return {
@@ -1223,10 +1238,9 @@ function getPaymentMethodConfig(paymentMethod) {
         creditedAmountLabel: 'PKR wallet credit',
         creditedAmountCalculator: (amount) => roundMoney(amount),
         transactionLabel: 'Transaction ID',
-        requiresTransactionId: false
+        requiresTransactionId: true
     };
 }
-
 function getPaymentRequestCreditAmount(paymentRequest) {
     const methodConfig = getPaymentMethodConfig(paymentRequest?.payment_method);
     const storedCreditAmount = Number(paymentRequest?.credit_amount || 0);
@@ -1745,6 +1759,32 @@ async function initDB() {
     await queryRun('ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS proof_hash TEXT');
     await queryRun('CREATE INDEX IF NOT EXISTS idx_payment_requests_proof_hash ON payment_requests (proof_hash) WHERE proof_hash IS NOT NULL');
 
+    // --- Payment auto-verify: stores an Easypaisa notification that arrived
+    // BEFORE the matching client request was submitted on the site ---
+  await queryRun(`
+    CREATE TABLE IF NOT EXISTS unmatched_notifications (
+        id SERIAL PRIMARY KEY,
+        amount NUMERIC(12,2) NOT NULL,
+        trx_id TEXT,
+        raw_text TEXT,
+        consumed BOOLEAN DEFAULT FALSE,
+        received_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    )
+`);
+
+await queryRun(`
+    ALTER TABLE unmatched_notifications
+    ADD COLUMN IF NOT EXISTS trx_id TEXT
+`);
+
+await queryRun(`
+    CREATE INDEX IF NOT EXISTS idx_unmatched_notifications_trx_id
+    ON unmatched_notifications (trx_id)
+`);
+
+    await queryRun(`CREATE INDEX IF NOT EXISTS idx_unmatched_notifications_amount ON unmatched_notifications (amount, consumed, received_at)`);
+    await queryRun('CREATE INDEX IF NOT EXISTS idx_unmatched_notifications_amount ON unmatched_notifications (amount, consumed, received_at)');
+    await queryRun('CREATE INDEX IF NOT EXISTS idx_unmatched_notifications_trx_id ON unmatched_notifications (trx_id, consumed, received_at)');
     await queryRun(`
         CREATE TABLE IF NOT EXISTS referrals (
             id SERIAL PRIMARY KEY,
@@ -1978,6 +2018,255 @@ async function getAdminReferralRecords(limit = 500) {
         [limit]
     );
     return rows.map(normalizeReferralRecord);
+}
+
+// ============================================================
+// PAYMENT AUTO-VERIFY (Easypaisa notification matching)
+// ============================================================
+
+// Same steps as the admin manual-approve route below, extracted into a
+// reusable function so BOTH manual admin clicks and auto-verify use the
+// exact same code path (balance credit, referral bonus, transaction record).
+async function approvePaymentRequestById(paymentRequestId) {
+    const client = await pool.connect();
+    let screenshotToDelete = null;
+    try {
+        await client.query('BEGIN');
+        const requestRes = await client.query('SELECT * FROM payment_requests WHERE id = $1 FOR UPDATE', [paymentRequestId]);
+        const paymentRequest = requestRes.rows[0];
+        if (!paymentRequest) throw new Error('Payment request not found');
+        if (paymentRequest.status !== 'pending') throw new Error('Only pending payment requests can be approved');
+        screenshotToDelete = paymentRequest.screenshot || null;
+        const userRes = await client.query('SELECT * FROM users WHERE id = $1 FOR UPDATE', [paymentRequest.user_id]);
+        const user = userRes.rows[0];
+        if (!user) throw new Error('User not found');
+        const creditedAmount = getPaymentRequestCreditAmount(paymentRequest);
+        await client.query('UPDATE users SET balance = COALESCE(balance, 0) + $1 WHERE id = $2', [creditedAmount, paymentRequest.user_id]);
+        await client.query(
+            `
+                INSERT INTO transactions (
+                    user_id, user_email, amount, type, status, description,
+                    transaction_id, screenshot, request_ip, device_fingerprint, browser_fingerprint, proof_hash
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            `,
+            [
+                paymentRequest.user_id,
+                paymentRequest.user_email,
+                creditedAmount,
+                'deposit',
+                'approved',
+                `Approved ${normalizePaymentMethod(paymentRequest.payment_method)} payment request #${paymentRequest.id} (${getPaymentRequestAmountSummary(paymentRequest)})`,
+                paymentRequest.transaction_id,
+                null,
+                paymentRequest.request_ip || null,
+                paymentRequest.device_fingerprint || null,
+                paymentRequest.browser_fingerprint || null,
+                paymentRequest.proof_hash || null
+            ]
+        );
+        await applyReferralBonusForApprovedDeposit(client, paymentRequest);
+        await client.query('UPDATE payment_requests SET status = $1, screenshot = NULL, credit_amount = $2 WHERE id = $3', ['approved', creditedAmount, paymentRequest.id]);
+        await client.query('COMMIT');
+        await removeUploadedFile(screenshotToDelete);
+        return { success: true, creditedAmount, paymentRequest };
+    } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+    } finally {
+        client.release();
+    }
+}
+
+// Called when a NEW Easypaisa notification arrives from the phone.
+// Case A: a matching pending request already exists -> approve it right away.
+// Case B: no matching request yet (client hasn't submitted the form on the
+// site yet, e.g. money arrived first) -> store it so the request-submission
+// flow can pick it up the moment the client does submit.
+async function handleIncomingNotificationForPayments(amount, rawText, trxId) {
+    const normalizedAmount = roundMoney(Number(amount));
+
+    if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
+        return { matched: false, reason: 'invalid_amount' };
+    }
+
+    const normalizedTrxId = normalizePaymentReference(trxId);
+
+    // TRX ID is REQUIRED for automatic Easypaisa verification.
+    // Never auto-approve by amount alone.
+    if (!normalizedTrxId) {
+        await queryRun(
+            `
+                INSERT INTO unmatched_notifications
+                    (amount, trx_id, raw_text)
+                VALUES ($1, NULL, $2)
+            `,
+            [
+                normalizedAmount,
+                String(rawText || '').slice(0, 1000)
+            ]
+        );
+
+        return {
+            matched: false,
+            reason: 'transaction_id_missing'
+        };
+    }
+
+    // First check whether this exact TRX ID was already used.
+    const alreadyUsed = await queryOne(
+        `
+            SELECT id, status
+            FROM payment_requests
+            WHERE LOWER(TRIM(transaction_id)) = LOWER(TRIM($1))
+            LIMIT 1
+        `,
+        [normalizedTrxId]
+    );
+
+    if (alreadyUsed) {
+        return {
+            matched: false,
+            duplicate: true,
+            reason: 'transaction_id_already_submitted',
+            existingRequestId: alreadyUsed.id,
+            existingStatus: alreadyUsed.status
+        };
+    }
+
+    // Exact TRX ID + exact amount + Easypaisa + pending.
+    const matchRes = await queryOne(
+        `
+            SELECT id
+            FROM payment_requests
+            WHERE status = 'pending'
+              AND payment_method = 'easypaisa'
+              AND amount = $1
+              AND LOWER(TRIM(transaction_id)) = LOWER(TRIM($2))
+              AND created_at >= now() - interval '10 minutes'
+            ORDER BY created_at ASC
+            LIMIT 1
+        `,
+        [normalizedAmount, normalizedTrxId]
+    );
+
+    if (matchRes) {
+        try {
+            await approvePaymentRequestById(matchRes.id);
+
+            return {
+                matched: true,
+                requestId: matchRes.id,
+                transactionId: normalizedTrxId
+            };
+        } catch (err) {
+            console.error(
+                `[payment-auto-verify] auto-approve failed for request ${matchRes.id}:`,
+                formatSafeError(err)
+            );
+
+            return {
+                matched: false,
+                reason: 'approve_failed'
+            };
+        }
+    }
+
+    // No exact request yet.
+    // Store BOTH amount and TRX ID so a later request can be matched safely.
+    await queryRun(
+        `
+            INSERT INTO unmatched_notifications
+                (amount, trx_id, raw_text)
+            VALUES ($1, $2, $3)
+        `,
+        [
+            normalizedAmount,
+            normalizedTrxId,
+            String(rawText || '').slice(0, 1000)
+        ]
+    );
+
+    return {
+        matched: false,
+        reason: 'stored_for_later_match',
+        transactionId: normalizedTrxId
+    };
+}
+// Called right after a client submits a new payment request.
+// Checks if a matching notification already arrived earlier (within 10 min)
+// and, if so, consumes it and auto-approves immediately.
+async function tryMatchExistingNotificationForRequest(paymentRequestId, amount) {
+    const normalizedAmount = roundMoney(Number(amount));
+
+    // Get the actual payment request and its submitted TRX ID.
+    const paymentRequest = await queryOne(
+        `
+            SELECT id, amount, payment_method, transaction_id, status
+            FROM payment_requests
+            WHERE id = $1
+            LIMIT 1
+        `,
+        [paymentRequestId]
+    );
+
+    if (!paymentRequest) return false;
+
+    // Only Easypaisa can use this automatic notification matcher.
+    if (normalizePaymentMethod(paymentRequest.payment_method) !== 'easypaisa') {
+        return false;
+    }
+
+    if (String(paymentRequest.status || '').toLowerCase() !== 'pending') {
+        return false;
+    }
+
+    const normalizedTrxId = normalizePaymentReference(
+        paymentRequest.transaction_id
+    );
+
+    // Never match an Easypaisa notification without a TRX ID.
+    if (!normalizedTrxId) {
+        return false;
+    }
+
+    const notification = await queryOne(
+        `
+            SELECT id
+            FROM unmatched_notifications
+            WHERE consumed = FALSE
+              AND amount = $1
+              AND LOWER(TRIM(trx_id)) = LOWER(TRIM($2))
+              AND received_at >= now() - interval '10 minutes'
+            ORDER BY received_at ASC
+            LIMIT 1
+        `,
+        [normalizedAmount, normalizedTrxId]
+    );
+
+    if (!notification) return false;
+
+    try {
+        await approvePaymentRequestById(paymentRequestId);
+
+        await queryRun(
+            `
+                UPDATE unmatched_notifications
+                SET consumed = TRUE
+                WHERE id = $1
+            `,
+            [notification.id]
+        );
+
+        return true;
+    } catch (err) {
+        console.error(
+            `[payment-auto-verify] auto-approve failed for request ${paymentRequestId}:`,
+            formatSafeError(err)
+        );
+
+        return false;
+    }
 }
 
 async function getReferralProgramByUserId(userId, req) {
@@ -7179,63 +7468,11 @@ app.get('/api/my-payment-history', ensureAuth, async (req, res) => {
 });
 
 app.post('/api/admin/payment-requests/:id/approve', ensureAdmin, async (req, res) => {
-    const client = await pool.connect();
-    let screenshotToDelete = null;
     try {
-        await client.query('BEGIN');
-        const requestRes = await client.query('SELECT * FROM payment_requests WHERE id = $1 FOR UPDATE', [Number(req.params.id)]);
-        const paymentRequest = requestRes.rows[0];
-        if (!paymentRequest) throw new Error('Payment request not found');
-        if (paymentRequest.status !== 'pending') throw new Error('Only pending payment requests can be approved');
-        screenshotToDelete = paymentRequest.screenshot || null;
-        const userRes = await client.query('SELECT * FROM users WHERE id = $1 FOR UPDATE', [paymentRequest.user_id]);
-        const user = userRes.rows[0];
-        if (!user) throw new Error('User not found');
-        const creditedAmount = getPaymentRequestCreditAmount(paymentRequest);
-        await client.query('UPDATE users SET balance = COALESCE(balance, 0) + $1 WHERE id = $2', [creditedAmount, paymentRequest.user_id]);
-        await client.query(
-            `
-                INSERT INTO transactions (
-                    user_id,
-                    user_email,
-                    amount,
-                    type,
-                    status,
-                    description,
-                    transaction_id,
-                    screenshot,
-                    request_ip,
-                    device_fingerprint,
-                    browser_fingerprint,
-                    proof_hash
-                )
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-            `,
-            [
-                paymentRequest.user_id,
-                paymentRequest.user_email,
-                creditedAmount,
-                'deposit',
-                'approved',
-                `Approved ${normalizePaymentMethod(paymentRequest.payment_method)} payment request #${paymentRequest.id} (${getPaymentRequestAmountSummary(paymentRequest)})`,
-                paymentRequest.transaction_id,
-                null,
-                paymentRequest.request_ip || null,
-                paymentRequest.device_fingerprint || null,
-                paymentRequest.browser_fingerprint || null,
-                paymentRequest.proof_hash || null
-            ]
-        );
-        await applyReferralBonusForApprovedDeposit(client, paymentRequest);
-        await client.query('UPDATE payment_requests SET status = $1, screenshot = NULL, credit_amount = $2 WHERE id = $3', ['approved', creditedAmount, paymentRequest.id]);
-        await client.query('COMMIT');
-        await removeUploadedFile(screenshotToDelete);
+        await approvePaymentRequestById(Number(req.params.id));
         res.json({ success: true });
     } catch (err) {
-        await client.query('ROLLBACK');
         res.status(400).send(formatSafeError(err, 'Payment request approval failed'));
-    } finally {
-        client.release();
     }
 });
 
@@ -7264,6 +7501,27 @@ app.post('/api/admin/payment-requests/:id/reject', ensureAdmin, async (req, res)
         res.status(400).send(formatSafeError(err, 'Payment request cancellation failed'));
     } finally {
         client.release();
+    }
+});
+
+// Called by the phone (Kotlin app or MacroDroid) whenever a new Easypaisa
+// notification is read. Protected by a shared secret so nobody else can
+// hit this and fake-approve payments.
+app.post('/api/payments/notification-webhook', async (req, res) => {
+    try {
+        const { secret, amount, rawText, trxId } = req.body;
+        const expectedSecret = process.env.WEBHOOK_SECRET;
+        if (!expectedSecret || secret !== expectedSecret) {
+            return res.status(401).json({ error: 'invalid secret' });
+        }
+        if (amount === undefined || amount === null) {
+            return res.status(400).json({ error: 'amount missing' });
+        }
+       const result = await handleIncomingNotificationForPayments(amount,rawText,trxId);
+        res.json(result);
+    } catch (err) {
+        console.error('[payment-auto-verify] webhook error:', formatSafeError(err));
+        res.status(500).json({ error: 'internal error' });
     }
 });
 
